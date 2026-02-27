@@ -15,7 +15,10 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 
-SCOPES = ["https://www.googleapis.com/auth/gmail.readonly"]
+SCOPES = [
+        'https://www.googleapis.com/auth/gmail.readonly',
+        'https://www.googleapis.com/auth/calendar.events'
+    ]
 CREDENTIALS_FILE = "credentials.json"
 TOKEN_FILE = "token.json"
 
@@ -23,8 +26,8 @@ TOKEN_FILE = "token.json"
 DEFAULT_SEARCH_QUERY = "subject:New shifts assigned at House Made Hospitality"
 
 
-def get_gmail_service():
-    """Authenticate and return a Gmail API service object."""
+def _get_credentials():
+    """Get (and refresh/create) OAuth2 credentials covering all SCOPES."""
     creds = None
 
     if os.path.exists(TOKEN_FILE):
@@ -46,7 +49,17 @@ def get_gmail_service():
         with open(TOKEN_FILE, "w") as token:
             token.write(creds.to_json())
 
-    return build("gmail", "v1", credentials=creds)
+    return creds
+
+
+def get_gmail_service():
+    """Authenticate and return a Gmail API service object."""
+    return build("gmail", "v1", credentials=_get_credentials())
+
+
+def get_calendar_service():
+    """Authenticate and return a Google Calendar API service object."""
+    return build("calendar", "v3", credentials=_get_credentials())
 
 
 def search_emails(service, query: str = DEFAULT_SEARCH_QUERY, max_results: int = 5) -> list[dict]:

@@ -14,7 +14,7 @@ from datetime import date
 from pathlib import Path
 
 from shift_parser import parse_shifts
-from calendar_generator import generate_ics
+from calendar_generator import add_to_calendar
 
 
 def main():
@@ -47,16 +47,19 @@ def main():
 
     if not shifts:
         print("\nNo shifts were found. Check that your email format matches the parser.")
-        print("Tip: Share a sample email and update shift_parser.py to match the format.")
         sys.exit(1)
 
     print(f"\nFound {len(shifts)} shift(s):")
     for s in shifts:
         print(f"  {s['date'].strftime('%A, %d %b %Y')}  {s['start'].strftime('%H:%M')} – {s['end'].strftime('%H:%M')}")
 
-    output_path = generate_ics(shifts)
-    print(f"\nCalendar file written: {output_path.resolve()}")
-    print("Import it into Google Calendar: Settings → Import & Export → Import")
+    print("\nAdding shifts to Google Calendar...")
+    from gmail_client import get_calendar_service
+    cal_service = get_calendar_service()
+    urls = add_to_calendar(cal_service, shifts)
+    print(f"\nAdded {len(urls)} event(s) to your Google Calendar.")
+    for url in urls:
+        print(f"  {url}")
 
 
 # ---------------------------------------------------------------------------

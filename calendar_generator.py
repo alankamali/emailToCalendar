@@ -1,101 +1,76 @@
 """
-Calendar generator — converts parsed shift data into a .ics file.
-
-The .ics file can be imported into Google Calendar via:
-  Settings → Import & Export → Import
+Calendar generator — adds parsed shift data directly to Google Calendar via the API.
 """
 
-import uuid
-from datetime import datetime, timezone, date, time
-from pathlib import Path
-
-from icalendar import Calendar, Event
+from datetime import datetime, date, time, timedelta
 
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 
-# Set your local timezone offset (e.g. "Europe/London", "America/New_York")
-# or use a UTC offset string like "+01:00"
 TIMEZONE = "Australia/Sydney"
 
-# Name shown for each calendar event
-EVENT_SUMMARY = "Work Shift"
-
-# Event colour — hex value of Google Calendar's "Flamingo" (#E67C73)
-# Recognised by Apple Calendar and some Google Calendar versions on import.
-EVENT_COLOR = "#E67C73"
-
-# Where to save the output file (relative to project root)
-OUTPUT_DIR = Path(".")
+# Google Calendar colorId for "Flamingo" (reliably applied via the API)
+COLOR_ID = "4"
 
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
-def generate_ics(shifts: list[dict], output_path: Path | None = None) -> Path:
+def add_to_calendar(service, shifts: list[dict]) -> list[str]:
     """
-    Generate a .ics file from a list of shift dicts.
+    Create Google Calendar events for each shift.
 
-    Each shift dict must have:
-        date  (datetime.date)
-        start (datetime.time)
-        end   (datetime.time)
-        title (str)
+    Args:
+        service: Google Calendar API service object (from get_calendar_service()).
+        shifts:  List of shift dicts with keys: date, start, end, title.
 
-    Returns the path to the created .ics file.
+    Returns:
+        List of URLs for the created events.
     """
     if not shifts:
-        raise ValueError("No shifts to write — the parser returned an empty list.")
+        raise ValueError("No shifts to add — the parser returned an empty list.")
 
-    cal = Calendar()
-    cal.add("prodid", "-//emailToCalendar//emailToCalendar//EN")
-    cal.add("version", "2.0")
-    cal.add("calscale", "GREGORIAN")
-    cal.add("x-wr-calname", "Work Shifts")
-    cal.add("x-wr-timezone", TIMEZONE)
-
+    urls = []
     for shift in shifts:
-        event = _make_event(shift)
-        cal.add_component(event)
+        event_body = _make_event_body(shift)
+        result = service.events().insert(
+            calendarId="primary",
+            body=event_body,
+        ).execute()
+        urls.append(result.get("htmlLink", ""))
 
-    if output_path is None:
-        earliest = min(s["date"] for s in shifts)
-        output_path = OUTPUT_DIR / f"shifts_{earliest.isoformat()}.ics"
-
-    output_path.write_bytes(cal.to_ical())
-    return output_path
+    return urls
 
 
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-def _make_event(shift: dict) -> Event:
-    """Build a VEVENT component from a single shift dict."""
-    event = Event()
-
+def _make_event_body(shift: dict) -> dict:
+    """Build a Google Calendar API event dict from a single shift dict."""
     shift_date: date = shift["date"]
     start: time = shift["start"]
     end: time = shift["end"]
-    title: str = shift.get("title", EVENT_SUMMARY)
+    title: str = shift.get("title", "Work Shift")
 
-    # Use floating (local) datetimes — Google Calendar respects these with
-    # your account's timezone setting
     dt_start = datetime.combine(shift_date, start)
     dt_end = datetime.combine(shift_date, end)
 
-    # Handle overnight shifts (end before start)
+    # Handle overnight shifts (end before or equal to start)
     if dt_end <= dt_start:
-        from datetime import timedelta
         dt_end += timedelta(days=1)
 
-    event.add("summary", title)
-    event.add("dtstart", dt_start)
-    event.add("dtend", dt_end)
-    event.add("dtstamp", datetime.now(tz=timezone.utc))
-    event.add("uid", str(uuid.uuid4()))
-    event.add("color", EVENT_COLOR)
-
-    return event
+    return {
+        "summary": title,
+        "start": {
+            "dateTime": dt_start.isoformat(),
+            "timeZone": TIMEZONE,
+        },
+        "end": {
+            "dateTime": dt_end.isoformat(),
+            "timeZone": TIMEZONE,
+        },
+        "colorId": COLOR_ID,
+    }
