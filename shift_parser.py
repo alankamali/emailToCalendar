@@ -43,7 +43,7 @@ WORK_SITE_RE = re.compile(r"^Work Site:\s*(.+)", re.IGNORECASE)
 # Public API
 # ---------------------------------------------------------------------------
 
-def parse_shifts(body: str, _reference_date: date | None = None) -> list[dict]:
+def parse_shifts(body: str) -> list[dict]:
     """
     Parse shift blocks from an Employment Hero email body.
 

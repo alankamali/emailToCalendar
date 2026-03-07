@@ -20,17 +20,7 @@ from calendar_generator import add_to_calendar
 def main():
     args = _parse_args()
 
-    # Resolve the reference Monday for the shift week
-    week_monday = None
-    if args.week:
-        try:
-            week_monday = date.fromisoformat(args.week)
-            if week_monday.weekday() != 0:
-                print(f"Warning: {args.week} is not a Monday. Shifts will still be parsed using day names.")
-        except ValueError:
-            print(f"Error: --week must be in YYYY-MM-DD format (e.g. --week 2025-03-03)")
-            sys.exit(1)
-
+    
     # Get the email body
     if args.file:
         body = _read_file(args.file)
@@ -43,7 +33,7 @@ def main():
 
     # Parse and generate
     print("\nParsing shifts...")
-    shifts = parse_shifts(body, _reference_date=week_monday)
+    shifts = parse_shifts(body)
 
     if not shifts:
         print("\nNo shifts were found. Check that your email format matches the parser.")
@@ -68,7 +58,7 @@ def main():
 
 def _parse_args():
     parser = argparse.ArgumentParser(
-        description="Parse a shift schedule email and generate a .ics calendar file."
+        description="Parse a shift schedule email and call Google Calendar API to add events.",
     )
     parser.add_argument(
         "--file", "-f",

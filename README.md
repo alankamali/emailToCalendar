@@ -1,10 +1,28 @@
 # emailToCalendar
 
-Parses a shift schedule email from Gmail and generates a `.ics` file you can import into Google Calendar.
+Parses a shift schedule email from Gmail account and then exports found shifts into the linked Google Calendar. 
 
 ---
+## Google Scripts Version (NEW)
+Setup the same project on GS so coworkers can access the functionality on a browser. 
+Click on this link and follow the prompts. 
 
-## Setup
+[Google Scripts Link](https://script.google.com/macros/s/AKfycbyVm-AowlXjzhtKQUNgzkxGVmcSOIvVBSubcoXdE49V46dOWrOW7Kus490aRxdrcsA2/exec)
+
+Since project is still only for personal use, have not got it verified yet. You will need to click on "Advanced" and then "Proceed" when warned about safety.
+
+### Privilage Disclaimer: 
+- GS can READ all your emails.
+- GS has full auth control to your Calendar.
+
+authScopes:
+```
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/calendar"
+  ]
+```
+## Setup on Local Device
 
 ### 1. Install dependencies
 
