@@ -1,4 +1,4 @@
-# emailToCalendar
+# emailToGoogleCalendar
 
 Parses a shift schedule email from Gmail account and then exports found shifts into the linked Google Calendar. 
 
@@ -7,7 +7,7 @@ Parses a shift schedule email from Gmail account and then exports found shifts i
 Setup the same project on GS so coworkers can access the functionality on a browser. 
 Click on this link and follow the prompts. 
 
-[Google Scripts Link](https://script.google.com/macros/s/AKfycbyVm-AowlXjzhtKQUNgzkxGVmcSOIvVBSubcoXdE49V46dOWrOW7Kus490aRxdrcsA2/exec)
+[Google Scripts Link](https://script.google.com/macros/s/AKfycbziDZf5dSdWqWeDZdHTOQegOr2dyeRS3WZzTKHuakDe7nEgTUZ-0bX4olhmJ_Li6XDs/exec)
 
 Since project is still only for personal use, have not got it verified yet. You will need to click on "Advanced" and then "Proceed" when warned about safety.
 
